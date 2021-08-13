@@ -53,6 +53,25 @@ export default defineComponent({
                 slides[i].classList.add("hide-slide");
             }
         },
+        handleCarousel(slides: NodeListOf<Element>, counter: number) {
+            if (counter === slides.length) {
+                this.status = CarouselStatus.FINISHED;
+                this.status = CarouselStatus.STARTED;
+                return counter = 0;
+            }
+            this.next(slides, counter);
+            this.$emit("next", counter)
+            return counter += 1;
+        },
+        handleInterval(slides: NodeListOf<Element>, counter: number) {
+            this.timer = window.setInterval(() => {
+                if(this.stop){
+                    window.clearInterval(this.timer)
+                    return this.handleInterval(slides, counter)
+                }
+                counter = this.handleCarousel(slides, counter)
+            }, this.items.interval)
+        }
     },
     setup() {
         const status = ref(CarouselStatus.NOT_STARTED);
@@ -71,17 +90,9 @@ export default defineComponent({
         }
 
         let counter: number = 0;
-        this.timer = window.setInterval(() => {
-            if (counter === slides.length) {
-                this.status = CarouselStatus.FINISHED;
-                counter = 0;
-                this.status = CarouselStatus.STARTED;
-            } else {
-                this.next(slides, counter);
-                this.$emit("next", counter)
-                counter += 1;
-            }
-        }, this.items.interval)
+        if (this.status === CarouselStatus.STARTED) {
+            this.handleInterval(slides, counter)
+        }
     },
     beforeDestroy() {
         clearInterval(this.timer)
